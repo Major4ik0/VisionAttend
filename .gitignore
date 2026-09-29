@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+*.db
+uploads/*
+!uploads/.gitkeep
+face_cache.pkl
+.venv/
+venv/
+.DS_Store
