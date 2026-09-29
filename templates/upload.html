@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Загрузка студентов</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <div class="max-w-xl mx-auto py-8 px-4">
+        
+        <div class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
+            <h1 class="text-2xl font-bold text-indigo-400">👤 Загрузка студента</h1>
+            <a href="/" class="text-sm text-gray-400 hover:text-white transition">← К журналу</a>
+        </div>
+
+        <form method="POST" action="/upload" enctype="multipart/form-data" class="bg-gray-800 p-6 rounded-xl border border-gray-700 space-y-4 mb-8">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">ФИО / Имя студента</label>
+                <input type="text" name="name" required placeholder="Например: Иванов_Иван" 
+                       class="w-full bg-gray-900 border border-gray-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Фотография лица</label>
+                <input type="file" name="file" accept="image/*" required 
+                       class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
+            </div>
+
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded-lg transition">
+                Загрузить и обновить базу
+            </button>
+        </form>
+
+        <h2 class="text-lg font-semibold text-gray-300 mb-4">Уже загружены:</h2>
+        <div class="grid grid-cols-2 gap-3">
+            {% for name in students %}
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700/50 text-sm text-gray-300 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                {{ name }}
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</body>
+</html>
