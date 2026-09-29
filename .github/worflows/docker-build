@@ -1,0 +1,32 @@
+name: Build and Export Docker Image
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: |
+          docker build -t attendance-system:latest .
+
+      - name: Save Docker image to .tar.gz
+        run: |
+          docker save attendance-system:latest | gzip > attendance-system.tar.gz
+
+      - name: Upload Image Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image-linux
+          path: attendance-system.tar.gz
+          retention-days: 7
