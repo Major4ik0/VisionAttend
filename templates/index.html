@@ -3,19 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <title>Учет посещаемости</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/tailwind.js"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen">
     <div class="max-w-6xl mx-auto py-8 px-4">
-        
-        <div class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
+
+        <!-- Верхняя панель навигации и профиля -->
+        <div class="flex flex-wrap justify-between items-center mb-8 border-b border-gray-800 pb-4 gap-4">
             <h1 class="text-2xl font-bold text-indigo-400">Посещаемость и Распознавание</h1>
-            <a href="/upload" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                + Загрузить студента
-            </a>
+
+            <div class="flex items-center gap-3">
+                <div class="text-xs text-right mr-2">
+                    <div class="text-gray-300 font-medium">{{ username }}</div>
+                    {% if is_admin %}
+                        <span class="text-emerald-400 font-semibold">Администратор</span>
+                    {% else %}
+                        <span class="text-gray-500">Просмотр</span>
+                    {% endif %}
+                </div>
+
+                {% if is_admin %}
+                    <a href="/admins" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition">
+                        Администраторы
+                    </a>
+                    <a href="/upload" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                        Добавить студента
+                    </a>
+                {% endif %}
+
+                <a href="/logout" class="bg-rose-900/40 hover:bg-rose-900 text-rose-300 px-3 py-2 rounded-lg text-sm font-medium transition border border-rose-800/40">
+                    Выйти
+                </a>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Левая колонка: Видеопоток и настройки камеры -->
             <div class="lg:col-span-1 space-y-4">
                 <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
                     <div class="flex items-center justify-between mb-3">
@@ -25,44 +48,66 @@
                             Прямой эфир
                         </span>
                     </div>
-                    
+
                     <div class="relative bg-black rounded-lg overflow-hidden aspect-video border border-gray-700 flex items-center justify-center">
                         <img src="/video_feed" alt="Поток камеры" class="w-full h-full object-cover">
                     </div>
                 </div>
 
+                {% if is_admin %}
                 <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
-                    <h3 class="text-sm font-semibold text-gray-300 mb-2">⚙️ Настройка видеоисточника</h3>
+                    <h3 class="text-sm font-semibold text-gray-300 mb-2">Настройка видеоисточника</h3>
                     <form method="POST" action="/update-camera" class="space-y-3">
                         <div>
-                            <label class="block text-xs text-gray-400 mb-1">RTSP URL или номер USB-камеры (0, 1):</label>
+                            <label class="block text-xs text-gray-400 mb-1">RTSP URL или номер камеры (0, 1):</label>
                             <input type="text" name="video_source" value="{{ current_video_source }}" required
                                    placeholder="rtsp://admin:12345@192.168.1.50:554/h264 или 0"
                                    class="w-full bg-gray-900 border border-gray-700 text-white px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:border-indigo-500">
                         </div>
                         <button type="submit" class="w-full bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium py-2 rounded-lg transition border border-gray-600">
-                            Подключить камеру
+                            Подключить
                         </button>
                     </form>
                 </div>
+                {% endif %}
             </div>
 
+            <!-- Правая колонка: Фильтры, выгрузка Excel и таблица журнала -->
             <div class="lg:col-span-2 space-y-4">
-                <form method="GET" action="/" class="flex items-center gap-4 bg-gray-800 p-3 rounded-xl border border-gray-700">
-                    <label class="text-sm font-medium text-gray-400">Выберите дату:</label>
-                    <input type="date" name="selected_date" value="{{ selected_date }}" 
-                           onchange="this.form.submit()"
-                           class="bg-gray-900 border border-gray-700 text-white px-3 py-1.5 rounded-lg focus:outline-none focus:border-indigo-500 text-sm">
-                </form>
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-wrap items-center justify-between gap-4">
+                    <!-- Просмотр журнала за одну выбранную дату -->
+                    <form method="GET" action="/" class="flex items-center gap-3">
+                        <label class="text-xs text-gray-400 font-semibold uppercase">Журнал за дату:</label>
+                        <input type="date" name="selected_date" value="{{ selected_date }}"
+                               onchange="this.form.submit()"
+                               class="bg-gray-900 border border-gray-700 text-white px-3 py-1.5 rounded-lg focus:outline-none focus:border-indigo-500 text-xs">
+                    </form>
 
+                    <!-- Выгрузка в Excel за произвольный период (доступно только админу) -->
+                    {% if is_admin %}
+                    <form method="GET" action="/export-attendance" class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs text-gray-400 font-semibold uppercase">Выгрузка в Excel:</span>
+                        <input type="date" name="start_date" value="{{ selected_date }}" required
+                               class="bg-gray-900 border border-gray-700 text-white px-2 py-1 rounded-lg text-xs focus:outline-none focus:border-indigo-500">
+                        <span class="text-xs text-gray-500">—</span>
+                        <input type="date" name="end_date" value="{{ selected_date }}" required
+                               class="bg-gray-900 border border-gray-700 text-white px-2 py-1 rounded-lg text-xs focus:outline-none focus:border-indigo-500">
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition">
+                            Скачать Excel
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+
+                <!-- Таблица учета посещаемости -->
                 <div class="bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-gray-800/50 border-b border-gray-700 text-gray-400 text-xs font-semibold uppercase">
-                                <th class="p-4">ФИО / Имя</th>
+                                <th class="p-4">ФИО</th>
                                 <th class="p-4">Статус</th>
                                 <th class="p-4">Время</th>
-                                <th class="p-4 text-right">Действие</th>
+                                {% if is_admin %}<th class="p-4 text-right">Действие</th>{% endif %}
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-700/50">
@@ -72,7 +117,7 @@
                                 <td class="p-4">
                                     {% if item.status == 'present' %}
                                         <span class="bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-full text-xs font-medium border border-emerald-500/20">
-                                            Был
+                                            Присутствовал
                                         </span>
                                     {% else %}
                                         <span class="bg-rose-500/10 text-rose-400 px-2.5 py-1 rounded-full text-xs font-medium border border-rose-500/20">
@@ -81,6 +126,7 @@
                                     {% endif %}
                                 </td>
                                 <td class="p-4 text-xs text-gray-400">{{ item.time }}</td>
+                                {% if is_admin %}
                                 <td class="p-4 text-right">
                                     <form method="POST" action="/update-attendance" class="inline">
                                         <input type="hidden" name="student_name" value="{{ item.name }}">
@@ -88,7 +134,7 @@
                                         {% if item.status == 'present' %}
                                             <input type="hidden" name="status" value="absent">
                                             <button type="submit" class="text-xs bg-gray-700 hover:bg-rose-900/50 text-rose-300 px-3 py-1.5 rounded-md transition border border-gray-600">
-                                                Снять отметку
+                                                Снять
                                             </button>
                                         {% else %}
                                             <input type="hidden" name="status" value="present">
@@ -98,6 +144,7 @@
                                         {% endif %}
                                     </form>
                                 </td>
+                                {% endif %}
                             </tr>
                             {% endfor %}
                         </tbody>

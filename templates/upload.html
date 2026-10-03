@@ -2,41 +2,83 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Загрузка студентов</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Добавление студентов</title>
+    <script src="/static/tailwind.js"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen">
-    <div class="max-w-xl mx-auto py-8 px-4">
-        
+    <div class="max-w-4xl mx-auto py-8 px-4">
+
         <div class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
-            <h1 class="text-2xl font-bold text-indigo-400">👤 Загрузка студента</h1>
-            <a href="/" class="text-sm text-gray-400 hover:text-white transition">← К журналу</a>
+            <h1 class="text-2xl font-bold text-indigo-400">Картотека студентов</h1>
+            <a href="/" class="text-sm text-gray-400 hover:text-white transition">К журналу</a>
         </div>
 
-        <form method="POST" action="/upload" enctype="multipart/form-data" class="bg-gray-800 p-6 rounded-xl border border-gray-700 space-y-4 mb-8">
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">ФИО / Имя студента</label>
-                <input type="text" name="name" required placeholder="Например: Иванов_Иван" 
-                       class="w-full bg-gray-900 border border-gray-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:border-indigo-500">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <!-- Снимок с текущей камеры -->
+            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-emerald-400 mb-2">Снимок с камеры</h2>
+                    <p class="text-xs text-gray-400 mb-4">
+                        Встаньте перед объективом, введите ФИО и нажмите кнопку для сохранения снимка в базу.
+                    </p>
+
+                    <div class="relative bg-black rounded-lg overflow-hidden aspect-video border border-gray-700 mb-4 flex items-center justify-center">
+                        <img src="/video_feed" alt="Камера" class="w-full h-full object-cover">
+                    </div>
+                </div>
+
+                <form method="POST" action="/capture-student" class="space-y-3">
+                    <div>
+                        <input type="text" name="name" required placeholder="ФИО (например: Иванов_Иван)"
+                               class="w-full bg-gray-900 border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded-lg text-sm transition">
+                        Сфотографировать и сохранить
+                    </button>
+                </form>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Фотография лица</label>
-                <input type="file" name="file" accept="image/*" required 
-                       class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
+            <!-- Загрузка файла с компьютера -->
+            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-indigo-400 mb-2">Загрузить файл</h2>
+                    <p class="text-xs text-gray-400 mb-4">
+                        Добавление ранее подготовленного файла изображения с жесткого диска.
+                    </p>
+                </div>
+
+                <form method="POST" action="/upload" enctype="multipart/form-data" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">ФИО студента</label>
+                        <input type="text" name="name" required placeholder="Например: Петров_Петр"
+                               class="w-full bg-gray-900 border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Файл изображения</label>
+                        <input type="file" name="file" accept="image/*" required
+                               class="w-full text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
+                    </div>
+
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded-lg text-sm transition">
+                        Загрузить файл
+                    </button>
+                </form>
             </div>
+        </div>
 
-            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded-lg transition">
-                Загрузить и обновить базу
-            </button>
-        </form>
-
-        <h2 class="text-lg font-semibold text-gray-300 mb-4">Уже загружены:</h2>
-        <div class="grid grid-cols-2 gap-3">
+        <h2 class="text-lg font-semibold text-gray-300 mb-4">Зарегистрированные студенты:</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {% for name in students %}
-            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700/50 text-sm text-gray-300 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                {{ name }}
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700/50 text-sm text-gray-300 flex items-center justify-between gap-2">
+                <span class="truncate font-medium">{{ name }}</span>
+
+                <form method="POST" action="/delete-student" onsubmit="return confirm('Удалить {{ name }} из системы распознавания?');" class="shrink-0">
+                    <input type="hidden" name="name" value="{{ name }}">
+                    <button type="submit" class="text-xs text-rose-400 hover:text-rose-200 bg-rose-500/10 hover:bg-rose-500/30 px-2.5 py-1 rounded transition border border-rose-500/20">
+                        Удалить
+                    </button>
+                </form>
             </div>
             {% endfor %}
         </div>

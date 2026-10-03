@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Администраторы</title>
+    <script src="/static/tailwind.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <div class="max-w-2xl mx-auto py-8 px-4">
+        <div class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
+            <h1 class="text-2xl font-bold text-indigo-400">Администраторы системы</h1>
+            <a href="/" class="text-sm text-gray-400 hover:text-white transition">К журналу</a>
+        </div>
+
+        <form method="POST" action="/admins/add" class="bg-gray-800 p-6 rounded-xl border border-gray-700 space-y-4 mb-8">
+            <h2 class="text-sm font-semibold text-gray-300">Назначить нового администратора</h2>
+            <div class="flex gap-3">
+                <input type="text" name="username" required placeholder="Логин учетной записи в Active Directory"
+                       class="flex-1 bg-gray-900 border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-indigo-500">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition">
+                    Добавить
+                </button>
+            </div>
+        </form>
+
+        <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+            <div class="p-4 border-b border-gray-700 text-sm font-semibold text-gray-300">Список администраторов:</div>
+            <ul class="divide-y divide-gray-700/50">
+                {% for admin in admins %}
+                <li class="p-4 flex justify-between items-center text-sm">
+                    <div>
+                        <span class="font-medium text-white">{{ admin[0] }}</span>
+                        <span class="text-xs text-gray-500 block">Добавлен: {{ admin[1][:10] }}</span>
+                    </div>
+                    {% if admin[0] != username.lower() %}
+                    <form method="POST" action="/admins/remove">
+                        <input type="hidden" name="username" value="{{ admin[0] }}">
+                        <button type="submit" class="text-xs text-rose-400 hover:text-rose-300 bg-rose-500/10 px-3 py-1.5 rounded border border-rose-500/20 transition">
+                            Отозвать права
+                        </button>
+                    </form>
+                    {% else %}
+                    <span class="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">Вы</span>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

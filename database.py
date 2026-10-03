@@ -3,7 +3,8 @@ from datetime import datetime, date
 
 DB_NAME = "attendance.db"
 
-def init_db():
+
+def init_db(initial_admin: str = None):
     with sqlite3.connect(DB_NAME) as conn:
         cursor = conn.cursor()
         cursor.execute("""
@@ -16,7 +17,53 @@ def init_db():
                 UNIQUE(student_name, date)
             )
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS admins (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                created_at TEXT NOT NULL
+            )
+        """)
+        if initial_admin:
+            cursor.execute("""
+                INSERT OR IGNORE INTO admins (username, created_at)
+                VALUES (?, ?)
+            """, (initial_admin.lower().strip(), datetime.now().isoformat()))
         conn.commit()
+
+
+def is_user_admin(username: str) -> bool:
+    if not username:
+        return False
+    with sqlite3.connect(DB_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM admins WHERE username = ?", (username.lower().strip(),))
+        return cursor.fetchone() is not None
+
+
+def add_admin(username: str):
+    with sqlite3.connect(DB_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT OR IGNORE INTO admins (username, created_at)
+            VALUES (?, ?)
+        """, (username.lower().strip(), datetime.now().isoformat()))
+        conn.commit()
+
+
+def get_all_admins():
+    with sqlite3.connect(DB_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT username, created_at FROM admins ORDER BY id ASC")
+        return cursor.fetchall()
+
+
+def remove_admin(username: str):
+    with sqlite3.connect(DB_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM admins WHERE username = ?", (username.lower().strip(),))
+        conn.commit()
+
 
 def mark_attendance(student_name: str, target_date: str = None, status: str = "present", target_time: str = None):
     if not target_date:
@@ -34,6 +81,7 @@ def mark_attendance(student_name: str, target_date: str = None, status: str = "p
                 time = excluded.time
         """, (student_name, target_date, target_time, status))
         conn.commit()
+
 
 def get_attendance_by_date(target_date: str, all_students: list):
     with sqlite3.connect(DB_NAME) as conn:
@@ -56,3 +104,14 @@ def get_attendance_by_date(target_date: str, all_students: list):
                 "time": "—"
             })
     return result
+
+def get_attendance_for_period(start_date: str, end_date: str):
+    with sqlite3.connect(DB_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT student_name, date, time, status 
+            FROM attendance 
+            WHERE date BETWEEN ? AND ?
+            ORDER BY date ASC, student_name ASC
+        """, (start_date, end_date))
+        return cursor.fetchall()

@@ -17,16 +17,20 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image
-        run: |
-          docker build -t attendance-system:latest .
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          tags: attendance-system:latest
+          outputs: type=docker,dest=/tmp/attendance-system.tar
 
-      - name: Save Docker image to .tar.gz
+      - name: Compress image archive
         run: |
-          docker save attendance-system:latest | gzip > attendance-system.tar.gz
+          gzip -1 /tmp/attendance-system.tar
 
       - name: Upload Image Artifact
         uses: actions/upload-artifact@v4
         with:
           name: docker-image-linux
-          path: attendance-system.tar.gz
+          path: /tmp/attendance-system.tar.gz
           retention-days: 7

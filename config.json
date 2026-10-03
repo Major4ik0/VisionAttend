@@ -1,3 +1,8 @@
 {
-    "video_source": "0"
+    "video_source": "0",
+    "ad_server": "192.168.1.10",
+    "ad_domain": "CORP.LOCAL",
+    "initial_admin": "24-zhuravlev.a.d",
+    "dev_mode": false,
+    "dev_password": "admin"
 }
