@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import shutil
 from contextlib import asynccontextmanager
 from datetime import date
 from ldap3 import Server, Connection, ALL, SIMPLE
@@ -50,28 +51,43 @@ cam = FaceRecognitionCamera(
 
 
 def authenticate_ad(username: str, password: str) -> bool:
-    # 1. Локальный режим разработки (без доступа к Windows Server)
+    # 1. Локальный режим разработки (без доступа к сети и LDAP)
     if config.get("dev_mode", False):
         dev_pass = config.get("dev_password", "admin")
         initial_admin = config.get("initial_admin", "admin")
-
-        # Разрешаем вход тестовому админу с dev-паролем
         if username.lower() == initial_admin.lower() and password == dev_pass:
             print(f"🔧 Вход в DEV-режиме: {username}")
             return True
         return False
 
-    # 2. Боевой режим через Active Directory Windows Server
-    server_ip = config.get("ad_server")
-    domain = config.get("ad_domain")
-    user_principal = f"{username}@{domain}"
+    server_ip = config.get("ad_server", "127.0.0.1")
+    domain = config.get("ad_domain", "academy.org")
+
+    # 2. Автоматическое формирование имени пользователя
+    # Если подключение идет к локальному тестовому контейнеру OpenLDAP:
+    if server_ip in ("127.0.0.1", "localhost", "host.docker.internal"):
+        dc_suffix = ",".join([f"dc={part}" for part in domain.split(".")])
+        if username.startswith("cn="):
+            user_principal = username
+        else:
+            user_principal = f"cn={username},{dc_suffix}"
+    else:
+        # Для боевого Windows Server 2012 в академии (формат Active Directory UPN)
+        if "@" in username or "\\" in username:
+            user_principal = username
+        else:
+            user_principal = f"{username}@{domain}"
 
     try:
-        server = Server(server_ip, get_info=ALL, connect_timeout=3)
+        print(f"[AUTH] Попытка входа: {user_principal} на сервер {server_ip}")
+        server = Server(server_ip, port=389, get_info=ALL, connect_timeout=3)
         conn = Connection(server, user=user_principal, password=password, authentication=SIMPLE)
-        return conn.bind()
+        result = conn.bind()
+        if result:
+            conn.unbind()
+        return result
     except Exception as e:
-        print(f"❌ Ошибка подключения к AD: {e}")
+        print(f"❌ Ошибка подключения к AD/LDAP: {e}")
         return False
 
 
@@ -92,9 +108,16 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 def get_all_student_names():
-    return [os.path.splitext(f)[0]
-            for f in os.listdir(UPLOADS_DIR)
-            if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+    names = set()
+    if not os.path.exists(UPLOADS_DIR):
+        return []
+    for item in os.listdir(UPLOADS_DIR):
+        item_path = os.path.join(UPLOADS_DIR, item)
+        if os.path.isdir(item_path):
+            names.add(item)
+        elif item.lower().endswith(('.jpg', '.jpeg', '.png')):
+            names.add(os.path.splitext(item)[0])
+    return sorted(list(names))
 
 
 def generate_camera_stream():
@@ -192,41 +215,18 @@ def update_camera(request: Request, video_source: str = Form(...)):
 def update_attendance(request: Request,
                       student_name: str = Form(...),
                       selected_date: str = Form(...),
-                      status: str = Form(...)):
+                      status: str = Form(...),
+                      reason: str = Form(None)):
     if not request.session.get("is_admin"):
         raise HTTPException(status_code=403, detail="Недостаточно прав")
 
-    mark_attendance(student_name=student_name, target_date=selected_date, status=status)
-    return RedirectResponse(url=f"/?selected_date={selected_date}", status_code=303)
-
-
-@app.get("/upload", response_class=HTMLResponse)
-def upload_page(request: Request):
-    if not request.session.get("is_admin"):
-        return RedirectResponse(url="/", status_code=303)
-
-    students = get_all_student_names()
-    return templates.TemplateResponse(
-        request=request,
-        name="upload.html",
-        context={"students": students, "username": request.session.get("user")}
+    mark_attendance(
+        student_name=student_name,
+        target_date=selected_date,
+        status=status,
+        reason=reason
     )
-
-
-@app.post("/upload")
-async def upload_student(request: Request, name: str = Form(...), file: UploadFile = File(...)):
-    if not request.session.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Недостаточно прав")
-
-    ext = os.path.splitext(file.filename)[1]
-    filename = f"{name}{ext}"
-    file_path = os.path.join(UPLOADS_DIR, filename)
-
-    with open(file_path, "wb") as f:
-        f.write(await file.read())
-
-    cam.load_fresh_faces()
-    return RedirectResponse(url="/upload", status_code=303)
+    return RedirectResponse(url=f"/?selected_date={selected_date}", status_code=303)
 
 
 @app.get("/admins", response_class=HTMLResponse)
@@ -266,53 +266,6 @@ def delete_admin(request: Request, username: str = Form(...)):
     return RedirectResponse(url="/admins", status_code=303)
 
 
-@app.post("/delete-student")
-def delete_student(request: Request, name: str = Form(...)):
-    # Проверяем права администратора
-    if not request.session.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Недостаточно прав")
-
-    name = name.strip()
-    deleted = False
-
-    # Ищем и удаляем файл изображения с любым поддерживаемым расширением
-    for filename in os.listdir(UPLOADS_DIR):
-        base_name, _ = os.path.splitext(filename)
-        if base_name == name:
-            file_path = os.path.join(UPLOADS_DIR, filename)
-            if os.path.isfile(file_path):
-                os.remove(file_path)
-                deleted = True
-
-    # Если файл был найден и удален — пересчитываем кэш лиц камеры
-    if deleted:
-        cam.load_fresh_faces()
-
-    return RedirectResponse(url="/upload", status_code=303)
-
-@app.post("/capture-student")
-def capture_student(request: Request, name: str = Form(...)):
-    # Проверка прав администратора
-    if not request.session.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Недостаточно прав")
-
-    name = name.strip()
-    if not name:
-        return RedirectResponse(url="/upload", status_code=303)
-
-    # Путь сохранения фотографии студента
-    filename = f"{name}.jpg"
-    file_path = os.path.join(UPLOADS_DIR, filename)
-
-    # Сохраняем чистый кадр с камеры без рамок
-    if cam.save_snapshot(file_path):
-        cam.load_fresh_faces()
-    else:
-        raise HTTPException(status_code=500, detail="Не удалось получить кадр с камеры")
-
-    return RedirectResponse(url="/upload", status_code=303)
-
-
 @app.get("/export-attendance")
 def export_attendance(request: Request, start_date: str = None, end_date: str = None):
     # Доступ разрешен только администраторам
@@ -340,6 +293,156 @@ def export_attendance(request: Request, start_date: str = None, end_date: str = 
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
 
+
+@app.post("/upload")
+async def upload_student(request: Request, name: str = Form(...), file: UploadFile = File(...)):
+    """Загрузка фотографии студента (поддерживает несколько фото в папку студента)."""
+    if not request.session.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Недостаточно прав")
+
+    name = name.strip()
+    student_dir = os.path.join(UPLOADS_DIR, name)
+    os.makedirs(student_dir, exist_ok=True)
+
+    # Сохраняем файл с уникальным именем на базе таймстемпа
+    ext = os.path.splitext(file.filename)[1]
+    filename = f"{int(time.time() * 1000)}{ext}"
+    file_path = os.path.join(student_dir, filename)
+
+    with open(file_path, "wb") as f:
+        f.write(await file.read())
+
+    # Перезагружаем векторную базу лиц в объекте камеры
+    if hasattr(cam, "load_known_faces"):
+        cam.load_known_faces()
+    elif hasattr(cam, "load_fresh_faces"):
+        cam.load_fresh_faces()
+
+    return RedirectResponse(url="/upload", status_code=303)
+
+
+@app.post("/capture-student")
+def capture_student(request: Request, name: str = Form(...)):
+    if not request.session.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Недостаточно прав")
+
+    name = name.strip()
+    if not name:
+        return RedirectResponse(url="/upload", status_code=303)
+
+    student_dir = os.path.join(UPLOADS_DIR, name)
+    os.makedirs(student_dir, exist_ok=True)
+
+    filename = f"{int(time.time() * 1000)}.jpg"
+    file_path = os.path.join(student_dir, filename)
+
+    # 1. Снимаем кадр из оперативной памяти
+    if cam.save_snapshot(file_path):
+        # 2. Добавляем только новый вектор под lock (занимает 0.1 сек, видеопоток не рвется)
+        cam.add_single_face(file_path, name)
+    else:
+        raise HTTPException(status_code=500, detail="Камера ещё не успела получить кадр")
+
+    return RedirectResponse(url="/upload", status_code=303)
+
+
+@app.post("/delete-student")
+def delete_student(request: Request, name: str = Form(...)):
+    """Удаление студента (папки со всеми ракурсами или одиночного файла)."""
+    if not request.session.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Недостаточно прав")
+
+    name = name.strip()
+    student_dir = os.path.join(UPLOADS_DIR, name)
+
+    # 1. Удаляем папку со всеми ракурсами
+    if os.path.exists(student_dir) and os.path.isdir(student_dir):
+        shutil.rmtree(student_dir)
+
+    # 2. Проверяем одиночные файлы старого формата в корне uploads
+    for filename in os.listdir(UPLOADS_DIR):
+        base_name, _ = os.path.splitext(filename)
+        if base_name == name:
+            file_path = os.path.join(UPLOADS_DIR, filename)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+
+    if hasattr(cam, "load_known_faces"):
+        cam.load_known_faces()
+    elif hasattr(cam, "load_fresh_faces"):
+        cam.load_fresh_faces()
+
+    return RedirectResponse(url="/upload", status_code=303)
+
+
+def get_all_students_with_photos():
+    """Возвращает список студентов со списком ссылок на их фотографии."""
+    students = {}
+    if not os.path.exists(UPLOADS_DIR):
+        return []
+
+    for item in sorted(os.listdir(UPLOADS_DIR)):
+        item_path = os.path.join(UPLOADS_DIR, item)
+        if item.startswith('.'):
+            continue
+
+        # Папка студента с несколькими ракурсами
+        if os.path.isdir(item_path):
+            photos = [
+                f"/uploads/{item}/{f}"
+                for f in sorted(os.listdir(item_path))
+                if f.lower().endswith(('.jpg', '.jpeg', '.png'))
+            ]
+            students[item] = photos
+
+        # Одиночные фотографии старого формата
+        elif item.lower().endswith(('.jpg', '.jpeg', '.png')):
+            name = os.path.splitext(item)[0]
+            if name not in students:
+                students[name] = []
+            students[name].append(f"/uploads/{item}")
+
+    return [{"name": name, "photos": photos} for name, photos in students.items()]
+
+
+@app.get("/upload", response_class=HTMLResponse)
+def upload_page(request: Request):
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/", status_code=303)
+
+    students = get_all_students_with_photos()
+    return templates.TemplateResponse(
+        request=request,
+        name="upload.html",
+        context={"students": students, "username": request.session.get("user")}
+    )
+
+
+@app.post("/delete-photo")
+def delete_photo(request: Request, photo_path: str = Form(...)):
+    """Удаление одной конкретной фотографии студента."""
+    if not request.session.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Недостаточно прав")
+
+    # Предотвращение Path Traversal: извлекаем относительный путь внутри uploads
+    clean_path = photo_path.replace("/uploads/", "").lstrip("/\\")
+    full_path = os.path.abspath(os.path.join(UPLOADS_DIR, clean_path))
+
+    # Удаляем файл только если он строго внутри UPLOADS_DIR
+    if full_path.startswith(os.path.abspath(UPLOADS_DIR)) and os.path.isfile(full_path):
+        os.remove(full_path)
+
+    # Обновляем базу дескрипторов лиц камеры
+    if hasattr(cam, "load_known_faces"):
+        cam.load_known_faces()
+    elif hasattr(cam, "load_fresh_faces"):
+        cam.load_fresh_faces()
+
+    return RedirectResponse(url="/upload", status_code=303)
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+

@@ -2,22 +2,40 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Администраторы</title>
+    <title>VisionAttend | Администраторы</title>
     <script src="/static/tailwind.js"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen">
     <div class="max-w-2xl mx-auto py-8 px-4">
         <div class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
-            <h1 class="text-2xl font-bold text-indigo-400">Администраторы системы</h1>
-            <a href="/" class="text-sm text-gray-400 hover:text-white transition">К журналу</a>
+            <h1 class="text-2xl font-bold text-indigo-400 flex items-center gap-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                Администраторы системы
+            </h1>
+            <a href="/" class="text-sm text-gray-400 hover:text-white transition flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                К журналу
+            </a>
         </div>
 
         <form method="POST" action="/admins/add" class="bg-gray-800 p-6 rounded-xl border border-gray-700 space-y-4 mb-8">
-            <h2 class="text-sm font-semibold text-gray-300">Назначить нового администратора</h2>
+            <h2 class="text-sm font-semibold text-gray-300 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                </svg>
+                Назначить нового администратора
+            </h2>
             <div class="flex gap-3">
                 <input type="text" name="username" required placeholder="Логин учетной записи в Active Directory"
                        class="flex-1 bg-gray-900 border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-indigo-500">
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
                     Добавить
                 </button>
             </div>
@@ -28,19 +46,34 @@
             <ul class="divide-y divide-gray-700/50">
                 {% for admin in admins %}
                 <li class="p-4 flex justify-between items-center text-sm">
-                    <div>
-                        <span class="font-medium text-white">{{ admin[0] }}</span>
-                        <span class="text-xs text-gray-500 block">Добавлен: {{ admin[1][:10] }}</span>
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-gray-750 border border-gray-700 flex items-center justify-center text-gray-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="font-medium text-white">{{ admin[0] }}</span>
+                            <span class="text-xs text-gray-500 block">Добавлен: {{ admin[1][:10] }}</span>
+                        </div>
                     </div>
                     {% if admin[0] != username.lower() %}
-                    <form method="POST" action="/admins/remove">
+                    <form method="POST" action="/admins/remove" class="m-0">
                         <input type="hidden" name="username" value="{{ admin[0] }}">
-                        <button type="submit" class="text-xs text-rose-400 hover:text-rose-300 bg-rose-500/10 px-3 py-1.5 rounded border border-rose-500/20 transition">
+                        <button type="submit" class="text-xs text-rose-400 hover:text-rose-300 bg-rose-500/10 px-3 py-1.5 rounded border border-rose-500/20 transition flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
                             Отозвать права
                         </button>
                     </form>
                     {% else %}
-                    <span class="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">Вы</span>
+                    <span class="text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1 font-medium">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Вы
+                    </span>
                     {% endif %}
                 </li>
                 {% endfor %}

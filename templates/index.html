@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Учет посещаемости</title>
+    <title>VisionAttend</title>
     <script src="/static/tailwind.js"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen">
@@ -10,28 +10,49 @@
 
         <!-- Верхняя панель навигации и профиля -->
         <div class="flex flex-wrap justify-between items-center mb-8 border-b border-gray-800 pb-4 gap-4">
-            <h1 class="text-2xl font-bold text-indigo-400">Посещаемость и Распознавание</h1>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold text-indigo-400">Посещаемость и Распознавание</h1>
+            </div>
 
             <div class="flex items-center gap-3">
                 <div class="text-xs text-right mr-2">
                     <div class="text-gray-300 font-medium">{{ username }}</div>
                     {% if is_admin %}
-                        <span class="text-emerald-400 font-semibold">Администратор</span>
+                        <span class="text-emerald-400 font-semibold flex items-center justify-end gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Администратор
+                        </span>
                     {% else %}
                         <span class="text-gray-500">Просмотр</span>
                     {% endif %}
                 </div>
 
                 {% if is_admin %}
-                    <a href="/admins" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition">
+                    <a href="/admins" class="bg-gray-750 hover:bg-gray-700 text-gray-200 px-3 py-2 rounded-lg text-sm font-medium transition border border-gray-700 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
                         Администраторы
                     </a>
-                    <a href="/upload" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                    <a href="/upload" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                        </svg>
                         Добавить студента
                     </a>
                 {% endif %}
 
-                <a href="/logout" class="bg-rose-900/40 hover:bg-rose-900 text-rose-300 px-3 py-2 rounded-lg text-sm font-medium transition border border-rose-800/40">
+                <a href="/logout" class="bg-rose-900/30 hover:bg-rose-900/60 text-rose-300 px-3 py-2 rounded-lg text-sm font-medium transition border border-rose-800/40 flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
                     Выйти
                 </a>
             </div>
@@ -42,29 +63,53 @@
             <div class="lg:col-span-1 space-y-4">
                 <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
                     <div class="flex items-center justify-between mb-3">
-                        <h2 class="font-semibold text-gray-200">Камера LIVE</h2>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            <h2 class="font-semibold text-gray-200 text-sm">Камера LIVE</h2>
+                        </div>
                         <span class="flex items-center gap-1.5 text-xs text-emerald-400 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                             Прямой эфир
                         </span>
                     </div>
 
-                    <div class="relative bg-black rounded-lg overflow-hidden aspect-video border border-gray-700 flex items-center justify-center">
-                        <img src="/video_feed" alt="Поток камеры" class="w-full h-full object-cover">
+                    <div class="relative group cursor-pointer overflow-hidden rounded-xl border border-gray-700 bg-black aspect-video flex items-center justify-center"
+                         onclick="openZoomModal()" title="Нажмите для приближения">
+                        <img id="main-camera-feed" src="/video_feed" alt="Поток камеры" class="w-full h-full object-cover">
+                        <!-- Подсказка при наведении с SVG лупой -->
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                            <span class="bg-gray-900/85 text-white text-xs px-3 py-1.5 rounded-full border border-gray-600 backdrop-blur-sm flex items-center gap-1.5 shadow-lg">
+                                <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/>
+                                </svg>
+                                Нажмите для полноэкранного зума
+                            </span>
+                        </div>
                     </div>
                 </div>
 
                 {% if is_admin %}
                 <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
-                    <h3 class="text-sm font-semibold text-gray-300 mb-2">Настройка видеоисточника</h3>
+                    <h3 class="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        Настройка видеоисточника
+                    </h3>
                     <form method="POST" action="/update-camera" class="space-y-3">
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">RTSP URL или номер камеры (0, 1):</label>
                             <input type="text" name="video_source" value="{{ current_video_source }}" required
-                                   placeholder="rtsp://admin:12345@192.168.1.50:554/h264 или 0"
+                                   placeholder="rtsp://test:12345tso@10.55.12.74:554/Streaming/Channels/101"
                                    class="w-full bg-gray-900 border border-gray-700 text-white px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:border-indigo-500">
                         </div>
-                        <button type="submit" class="w-full bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium py-2 rounded-lg transition border border-gray-600">
+                        <button type="submit" class="w-full bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium py-2 rounded-lg transition border border-gray-600 flex items-center justify-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
                             Подключить
                         </button>
                     </form>
@@ -75,24 +120,30 @@
             <!-- Правая колонка: Фильтры, выгрузка Excel и таблица журнала -->
             <div class="lg:col-span-2 space-y-4">
                 <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-wrap items-center justify-between gap-4">
-                    <!-- Просмотр журнала за одну выбранную дату -->
-                    <form method="GET" action="/" class="flex items-center gap-3">
-                        <label class="text-xs text-gray-400 font-semibold uppercase">Журнал за дату:</label>
+                    <!-- Просмотр журнала за дату -->
+                    <form method="GET" action="/" class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span class="text-xs text-gray-400 font-semibold uppercase">Журнал:</span>
                         <input type="date" name="selected_date" value="{{ selected_date }}"
                                onchange="this.form.submit()"
                                class="bg-gray-900 border border-gray-700 text-white px-3 py-1.5 rounded-lg focus:outline-none focus:border-indigo-500 text-xs">
                     </form>
 
-                    <!-- Выгрузка в Excel за произвольный период (доступно только админу) -->
+                    <!-- Выгрузка в Excel -->
                     {% if is_admin %}
                     <form method="GET" action="/export-attendance" class="flex flex-wrap items-center gap-2">
-                        <span class="text-xs text-gray-400 font-semibold uppercase">Выгрузка в Excel:</span>
+                        <span class="text-xs text-gray-400 font-semibold uppercase">Период:</span>
                         <input type="date" name="start_date" value="{{ selected_date }}" required
                                class="bg-gray-900 border border-gray-700 text-white px-2 py-1 rounded-lg text-xs focus:outline-none focus:border-indigo-500">
                         <span class="text-xs text-gray-500">—</span>
                         <input type="date" name="end_date" value="{{ selected_date }}" required
                                class="bg-gray-900 border border-gray-700 text-white px-2 py-1 rounded-lg text-xs focus:outline-none focus:border-indigo-500">
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition">
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
                             Скачать Excel
                         </button>
                     </form>
@@ -103,42 +154,100 @@
                 <div class="bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-800/50 border-b border-gray-700 text-gray-400 text-xs font-semibold uppercase">
+                            <tr class="bg-gray-800/60 border-b border-gray-700 text-gray-400 text-xs font-semibold uppercase">
                                 <th class="p-4">ФИО</th>
                                 <th class="p-4">Статус</th>
+                                <th class="p-4">Причина отсутствия</th>
                                 <th class="p-4">Время</th>
                                 {% if is_admin %}<th class="p-4 text-right">Действие</th>{% endif %}
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-700/50">
                             {% for item in records %}
-                            <tr class="hover:bg-gray-750">
-                                <td class="p-4 font-medium text-sm">{{ item.name }}</td>
+                            <tr class="hover:bg-gray-750 transition-colors">
+                                <td class="p-4 font-medium text-sm text-gray-200">{{ item.name }}</td>
+
+                                <!-- Статус -->
                                 <td class="p-4">
                                     {% if item.status == 'present' %}
-                                        <span class="bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-full text-xs font-medium border border-emerald-500/20">
+                                        <span class="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-full text-xs font-medium border border-emerald-500/20">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                            </svg>
                                             Присутствовал
                                         </span>
                                     {% else %}
-                                        <span class="bg-rose-500/10 text-rose-400 px-2.5 py-1 rounded-full text-xs font-medium border border-rose-500/20">
+                                        <span class="inline-flex items-center gap-1.5 bg-rose-500/10 text-rose-400 px-2.5 py-1 rounded-full text-xs font-medium border border-rose-500/20">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
                                             Отсутствовал
                                         </span>
                                     {% endif %}
                                 </td>
-                                <td class="p-4 text-xs text-gray-400">{{ item.time }}</td>
+
+                                <!-- Колонка причины отсутствия -->
+                                <td class="p-4">
+                                    {% if item.status == 'absent' %}
+                                        {% if is_admin %}
+                                        <form method="POST" action="/update-attendance" class="flex items-center gap-1.5 m-0">
+                                            <input type="hidden" name="student_name" value="{{ item.name }}">
+                                            <input type="hidden" name="selected_date" value="{{ selected_date }}">
+                                            <input type="hidden" name="status" value="absent">
+
+                                            <input type="text" name="reason" value="{{ item.reason }}"
+                                                   list="reasons-list"
+                                                   placeholder="Укажите причину..."
+                                                   class="bg-gray-900 border border-gray-700 text-white px-2.5 py-1 rounded text-xs focus:outline-none focus:border-indigo-500 w-44">
+
+                                            <datalist id="reasons-list">
+                                                <option value="Болел (справка)">
+                                                <option value="Уважительная причина">
+                                                <option value="Неуважительная причина">
+                                                <option value="Заявление">
+                                                <option value="Опоздал">
+                                            </datalist>
+
+                                            <!-- Кнопка сохранения с SVG дискетой -->
+                                            <button type="submit" title="Сохранить причину"
+                                                    class="bg-indigo-600 hover:bg-indigo-500 text-white p-1.5 rounded transition shadow">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                            <span class="text-xs text-gray-300">{{ item.reason if item.reason else '—' }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-xs text-gray-500">—</span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="p-4 text-xs text-gray-400 font-mono">{{ item.time }}</td>
+
+                                <!-- Переключение статуса Присутствовал / Отсутствовал -->
                                 {% if is_admin %}
                                 <td class="p-4 text-right">
-                                    <form method="POST" action="/update-attendance" class="inline">
+                                    <form method="POST" action="/update-attendance" class="inline m-0">
                                         <input type="hidden" name="student_name" value="{{ item.name }}">
                                         <input type="hidden" name="selected_date" value="{{ selected_date }}">
                                         {% if item.status == 'present' %}
                                             <input type="hidden" name="status" value="absent">
-                                            <button type="submit" class="text-xs bg-gray-700 hover:bg-rose-900/50 text-rose-300 px-3 py-1.5 rounded-md transition border border-gray-600">
+                                            <input type="hidden" name="reason" value="">
+                                            <button type="submit" class="text-xs bg-gray-700/80 hover:bg-rose-900/50 text-rose-300 px-3 py-1.5 rounded-md transition border border-gray-600 inline-flex items-center gap-1">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
                                                 Снять
                                             </button>
                                         {% else %}
                                             <input type="hidden" name="status" value="present">
-                                            <button type="submit" class="text-xs bg-gray-700 hover:bg-emerald-900/50 text-emerald-300 px-3 py-1.5 rounded-md transition border border-gray-600">
+                                            <input type="hidden" name="reason" value="">
+                                            <button type="submit" class="text-xs bg-gray-700/80 hover:bg-emerald-900/50 text-emerald-300 px-3 py-1.5 rounded-md transition border border-gray-600 inline-flex items-center gap-1">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                </svg>
                                                 Отметить
                                             </button>
                                         {% endif %}
@@ -154,5 +263,87 @@
         </div>
 
     </div>
+
+    <!-- Модальное окно полноэкранного приближения -->
+    <div id="cameraModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm hidden flex flex-col justify-between p-4">
+        <!-- Верхняя панель управления с SVG-кнопками -->
+        <div class="flex justify-between items-center text-white px-2">
+            <div class="flex items-center gap-3">
+                <span class="font-semibold text-sm sm:text-base text-indigo-400 flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                    Живой просмотр с приближением
+                </span>
+                <span id="zoomLevelText" class="text-xs bg-gray-800 border border-gray-700 px-2 py-0.5 rounded text-gray-300 font-mono">100%</span>
+                <span class="text-xs text-gray-500 hidden sm:inline">(Колёсико: зум, ЛКМ: перемещение, двойной клик: сброс)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="zoomIn()" title="Приблизить" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 p-1.5 rounded text-white transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                </button>
+                <button type="button" onclick="zoomOut()" title="Отдалить" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 p-1.5 rounded text-white transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                    </svg>
+                </button>
+                <button type="button" onclick="resetZoom()" title="Сбросить масштаб" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 px-2.5 py-1 rounded text-xs text-gray-300 transition flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Сброс
+                </button>
+                <button type="button" onclick="closeZoomModal()" title="Закрыть" class="bg-rose-600/80 hover:bg-rose-600 p-1.5 rounded text-white transition ml-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="modalViewport" class="flex-1 w-full h-full overflow-hidden flex items-center justify-center my-2 cursor-grab select-none">
+            <img id="modalCameraFeed" src="" alt="Zoom Live Feed" class="max-h-[85vh] max-w-full object-contain transition-transform duration-75 pointer-events-none">
+        </div>
+    </div>
+
+    <script>
+        let scale = 1, posX = 0, posY = 0, isDragging = false, startX = 0, startY = 0;
+        const modal = document.getElementById('cameraModal'), modalImg = document.getElementById('modalCameraFeed'), viewport = document.getElementById('modalViewport'), zoomText = document.getElementById('zoomLevelText');
+
+        function updateTransform() {
+            modalImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+            zoomText.innerText = `${Math.round(scale * 100)}%`;
+        }
+        function openZoomModal() { modalImg.src = "/video_feed"; modal.classList.remove('hidden'); resetZoom(); }
+        function closeZoomModal() { modal.classList.add('hidden'); modalImg.src = ""; resetZoom(); }
+        function resetZoom() { scale = 1; posX = 0; posY = 0; updateTransform(); }
+        function zoomIn() { scale = Math.min(scale + 0.3, 5); updateTransform(); }
+        function zoomOut() { scale = Math.max(scale - 0.3, 1); if (scale === 1) { posX = 0; posY = 0; } updateTransform(); }
+
+        viewport.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            scale = Math.min(Math.max(1, scale + (e.deltaY < 0 ? 0.2 : -0.2)), 5);
+            if (scale === 1) { posX = 0; posY = 0; }
+            updateTransform();
+        }, { passive: false });
+
+        viewport.addEventListener('mousedown', (e) => {
+            if (scale <= 1) return;
+            isDragging = true; startX = e.clientX - posX; startY = e.clientY - posY;
+            viewport.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            posX = e.clientX - startX; posY = e.clientY - startY;
+            updateTransform();
+        });
+
+        window.addEventListener('mouseup', () => { isDragging = false; viewport.style.cursor = scale > 1 ? 'grab' : 'default'; });
+        viewport.addEventListener('dblclick', resetZoom);
+        window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeZoomModal(); });
+    </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 {
     "video_source": "0",
-    "ad_server": "192.168.1.10",
-    "ad_domain": "CORP.LOCAL",
+    "ad_server": "192.168.250.250",
+    "ad_domain": "academy.org",
     "initial_admin": "24-zhuravlev.a.d",
     "dev_mode": false,
     "dev_password": "admin"

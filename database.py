@@ -17,6 +17,11 @@ def init_db(initial_admin: str = None):
                 UNIQUE(student_name, date)
             )
         """)
+        try:
+            cursor.execute("ALTER TABLE attendance ADD COLUMN reason TEXT DEFAULT ''")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass  # Колонка уже существует
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS admins (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,6 +35,7 @@ def init_db(initial_admin: str = None):
                 VALUES (?, ?)
             """, (initial_admin.lower().strip(), datetime.now().isoformat()))
         conn.commit()
+
 
 
 def is_user_admin(username: str) -> bool:
@@ -65,43 +71,73 @@ def remove_admin(username: str):
         conn.commit()
 
 
-def mark_attendance(student_name: str, target_date: str = None, status: str = "present", target_time: str = None):
+def mark_attendance(student_name: str, target_date: str = None, status: str = 'present', reason: str = None):
+    """Отметка или обновление статуса и причины отсутствия."""
+    from datetime import date, datetime
     if not target_date:
         target_date = date.today().isoformat()
-    if not target_time:
-        target_time = datetime.now().strftime("%H:%M:%S")
+    current_time = datetime.now().strftime("%H:%M:%S")
 
     with sqlite3.connect(DB_NAME) as conn:
         cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO attendance (student_name, date, time, status)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(student_name, date) DO UPDATE SET
-                status = excluded.status,
-                time = excluded.time
-        """, (student_name, target_date, target_time, status))
+        cursor.execute(
+            "SELECT id, reason FROM attendance WHERE student_name = ? AND date = ?",
+            (student_name, target_date)
+        )
+        row = cursor.fetchone()
+        # Если передана новая причина — используем её, иначе оставляем старую
+        new_reason = reason if reason is not None else (row[1] if row and row[1] else "")
+        if row:
+            cursor.execute(
+                """
+                UPDATE attendance 
+                SET status = ?, time = ?, reason = ?
+                WHERE id = ?
+                """,
+                (status, current_time, new_reason, row[0])
+            )
+        else:
+            cursor.execute(
+                """
+                INSERT INTO attendance (student_name, date, time, status, reason)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (student_name, target_date, current_time, status, new_reason)
+            )
         conn.commit()
 
 
 def get_attendance_by_date(target_date: str, all_students: list):
+    records_dict = {}
     with sqlite3.connect(DB_NAME) as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT student_name, time, status FROM attendance WHERE date = ?", (target_date,))
-        records = {row[0]: {"time": row[1], "status": row[2]} for row in cursor.fetchall()}
+        cursor.execute(
+            "SELECT student_name, time, status, reason FROM attendance WHERE date = ?",
+            (target_date,)
+        )
+        for row in cursor.fetchall():
+            records_dict[row[0]] = {
+                "time": row[1],
+                "status": row[2],
+                "reason": row[3] or ""
+            }
 
     result = []
-    for name in all_students:
-        if name in records:
+    for student in all_students:
+        if student in records_dict:
+            rec = records_dict[student]
             result.append({
-                "name": name,
-                "status": records[name]["status"],
-                "time": records[name]["time"]
+                "name": student,
+                "status": rec["status"],
+                "time": rec["time"],
+                "reason": rec["reason"]
             })
         else:
             result.append({
-                "name": name,
+                "name": student,
                 "status": "absent",
-                "time": "—"
+                "time": "—",
+                "reason": ""
             })
     return result
 
