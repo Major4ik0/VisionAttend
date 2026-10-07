@@ -5,6 +5,10 @@ on:
     branches: [ "main", "master" ]
   workflow_dispatch:
 
+# Разрешение Actions на создание тегов и публикацию в Releases
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,24 +17,60 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 1. Распознавание версии из комментария коммита
+      - name: Determine Version Tag
+        id: version_step
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          echo "Commit message: $COMMIT_MSG"
+          
+          # Ищем шаблон вида v1, v2, v3, v3.1, V5 (регистронезависимо)
+          EXTRACTED=$(echo "$COMMIT_MSG" | grep -oiE '\bv[0-9]+(\.[0-9]+)*\b' | head -n 1 | tr '[:upper:]' '[:lower:]')
+          
+          if [ -n "$EXTRACTED" ]; then
+            echo "✅ Найдена версия: $EXTRACTED"
+            TAG="$EXTRACTED"
+          else
+            echo "ℹ️ Версия не указана. Назначаем номер сборки."
+            TAG="build-${{ github.run_number }}"
+          fi
+          
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # 2. Сборка Docker-образа с распознанным тегом
       - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          tags: attendance-system:latest
+          tags: attendance-system:${{ steps.version_step.outputs.tag }}
           outputs: type=docker,dest=/tmp/attendance-system.tar
 
+      # 3. Сжатие и именование архива
       - name: Compress image archive
         run: |
           gzip -1 /tmp/attendance-system.tar
+          mv /tmp/attendance-system.tar.gz "/tmp/attendance-system-${{ steps.version_step.outputs.tag }}.tar.gz"
 
-      - name: Upload Image Artifact
-        uses: actions/upload-artifact@v4
+      # 4. Публикация архива в раздел GitHub Releases
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
         with:
-          name: docker-image-linux
-          path: /tmp/attendance-system.tar.gz
-          retention-days: 7
+          tag_name: ${{ steps.version_step.outputs.tag }}
+          name: ${{ steps.version_step.outputs.tag }}
+          body: |
+            ### Офлайн-образ системы посещаемости
+            - **Версия / Тег:** `${{ steps.version_step.outputs.tag }}`
+            - **Сообщение коммита:** `${{ github.event.head_commit.message }}`
+
+            #### Развертывание в закрытой сети академии:
+            ```bash
+            docker load -i attendance-system-${{ steps.version_step.outputs.tag }}.tar.gz
+            ```
+          files: /tmp/attendance-system-${{ steps.version_step.outputs.tag }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
