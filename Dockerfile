@@ -1,12 +1,8 @@
 # ================= ЭТАП 1: Сборка wheel-пакетов =================
 FROM python:3.11-slim AS builder
 
-# Устанавливаем компиляторы только для сборки dlib
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    cmake \
-    libopenblas-dev \
-    liblapack-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
@@ -26,11 +22,12 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-# Ставим только runtime-библиотеки (без gcc, cmake и dev-заголовков)
+# Ставим только необходимые runtime-библиотеки:
+# - libglib2.0-0 для OpenCV
+# - libgomp1 для многопоточного OpenMP инференса ONNX Runtime на CPU
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libopenblas0 \
-    liblapack3 \
     libglib2.0-0 \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Копируем собранные wheels из builder и устанавливаем их
@@ -39,11 +36,11 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir /wheels/* && \
     rm -rf /wheels
 
-# Копируем код проекта
+# Копируем код проекта (включая папку models/ с локальными весами InsightFace)
 COPY . .
 
-# Создаем директорию для загрузки фото
-RUN mkdir -p uploads
+# Создаем директории для загрузки фото и оффлайн-моделей
+RUN mkdir -p uploads models/insightface/models/buffalo_l
 
 EXPOSE 8000
 

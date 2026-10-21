@@ -2,6 +2,14 @@ import os
 import json
 import time
 import shutil
+import collections
+import collections.abc
+
+# Совместимость старых версий ldap3 с Python 3.10+ (где collections.* перенесены в collections.abc.*)
+for _attr in ('MutableMapping', 'Mapping', 'Sequence', 'Iterable', 'Callable', 'Container', 'Set', 'MutableSet', 'MutableSequence'):
+    if not hasattr(collections, _attr) and hasattr(collections.abc, _attr):
+        setattr(collections, _attr, getattr(collections.abc, _attr))
+
 from contextlib import asynccontextmanager
 from datetime import date
 from ldap3 import Server, Connection, ALL, SIMPLE
@@ -443,6 +451,6 @@ def delete_photo(request: Request, photo_path: str = Form(...)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=7777)
 
 
